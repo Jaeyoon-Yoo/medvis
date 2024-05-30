@@ -1,0 +1,35 @@
+.leftnav {
+    width:22rem;
+    z-index: 1;
+    overflow-x: hidden;
+    background-image: radial-gradient(#c9151551 0.5px, transparent 0.5px);
+    background-size: 6px 6px;
+}
+.main {
+    margin-left: 22rem;
+    height: 80vh;
+}
+
+.btn {
+    width: 100px;
+    height: 30px;
+}
+
+.main_table_card {
+    width: 200px;
+    min-height: 50px;
+    text-align: center;
+    border: 1px solid black;
+}
+.main_table_now{
+    text-align: right;
+    flex-wrap: nowrap;
+    width: 200px;
+    height: 20px;
+}
+.main_table_past{
+    text-align: left;
+    flex-wrap: nowrap;
+    width: 200px;
+    height: 20px;
+}

@@ -1,0 +1,44 @@
+.screen_01_image_view,
+.screen_02_table_list,
+.screen_03_detail_results {
+    height: 100vh; /* Full height */
+    display: inline-block;
+    top: 0;
+}
+.screen_01_image_view {
+    position: fixed;
+    width: 20vw; /* 20% of viewport width */
+    background-color: rgb(170, 214, 35);
+}
+.screen_02_table_list {
+    position: fixed;
+    margin-left: 20vw;
+    width: 15vw; /* 10% of viewport width */
+    background-color: rgb(187, 33, 33);
+}
+.screen_03_detail_results {
+    position: fixed;
+    margin-left: 35vw;
+    width: 45vw; /* 70% of viewport width */
+    background-color: rgb(95, 29, 201);
+}
+
+.Result_Block {
+    display: flex;
+    flex-direction: row;
+    height: 20vh;
+    width: 45vw;
+    gap: 10px;
+    justify-content: space-around;
+    background-color: rgb(202, 240, 87);
+    gap: 10px;
+    white-space: nowrap; 
+    overflow-x: auto;
+}
+
+.result_Cards {
+    display: block;
+    height: 18vh;
+    width: 20vw;
+    background-color: rgb(229, 235, 212);
+}
