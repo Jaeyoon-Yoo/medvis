@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 200px;
+            height: 100vh;
+            background-color: #f8f9fa;
+            padding: 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar a, .sidebar select, .sidebar label {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #000;
+            margin-bottom: 5px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .sidebar a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        select {
+            height: 40px;
+        }
+        label {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Navigation</h2>
+        <label for="patientSelect">Select Patient:</label>
+        <select id="patientSelect" onchange="redirectPage()">
+            <option value="">--Select Patient--</option>
+            {% for patient_id in patient_ids %}
+            <option value="{{ patient_id }}" {% if patient_id == selected_id %}selected{% endif %}>{{ patient_id }}</option>
+            {% endfor %}
+        </select>
+        <a href="/patient_page?ID={{ selected_id }}">Patient Page</a>
+        <a href="/urine_page?ID={{ selected_id }}">Urine Data</a>
+        {% block sidebar %}{% endblock %}
+    </div>
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+        function redirectPage() {
+            const patientID = document.getElementById('patientSelect').value;
+            const currentPage = window.location.pathname;
+            if (patientID) {
+                window.location.href = `${currentPage}?ID=${patientID}`;
+            }
+        }
+    </script>
+</body>
+</html>

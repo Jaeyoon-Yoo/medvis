@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Urine Data{% endblock %}
+
+{% block content %}
+<h1>Urine Data for Patient {{ ID }}</h1>
+<canvas id="urineChart" style="margin-top: 20px;"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function fetchUrineData() {
+        const patientID = document.getElementById('patientSelect').value || "{{ ID }}";
+        if (patientID) {
+            fetch(`/get_urine_data?ID=${patientID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.time.length === 0) {
+                        alert("No urine data available for this patient.");
+                        return;
+                    }
+                    const ctx = document.getElementById('urineChart').getContext('2d');
+                    if (window.urineChart) {
+                        window.urineChart.destroy();
+                    }
+                    window.urineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.time,
+                            datasets: [
+                                {
+                                    label: 'Urine Input',
+                                    data: data.amount_input,
+                                    borderColor: 'blue',
+                                    borderWidth: 1,
+                                    fill: false
+                                },
+                                {
+                                    label: 'Urine Output',
+                                    data: data.amount_output,
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    fill: false
+                                }
+                            ]
+                        },
+                        options: {
+                            scales: {
+                                x: {
+                                    type: 'time',
+                                    time: {
+                                        unit: 'hour'
+                                    }
+                                },
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching urine data:', error));
+        } else {
+            if (window.urineChart) {
+                window.urineChart.destroy();
+            }
+        }
+    }
+    document.addEventListener('DOMContentLoaded', fetchUrineData);
+</script>
+{% endblock %}
