@@ -24,7 +24,7 @@ def patient_page():
 
 @app.route('/get_main_table')
 def get_main_table():
-    print(table_02_ID_now)
+    print(table_01_all)
     print(table_03_Cate_now)
     return {'IDs': list(table_02_ID_now['subject_id'].astype('str').values), 
             'Categories': list(table_03_Cate_now['category'].astype('str').values)}
@@ -66,7 +66,11 @@ def get_filtered_data():
         Cate = args['Cate']
     else:
         Cate = False
-    output = get_data({'ID': ID, 'Cate': Cate})
+    if 'Label' in args.keys():
+        Label = args['Label']
+    else:
+        Label = False
+    output = get_data({'ID': ID, 'Cate': Cate, 'Label': Label})
     return {'Date': list(output['starttime'].astype(str)),
             'Value': list(output['value'].astype(str)),
             'Label': list(output['label'].astype(str)),
@@ -83,9 +87,16 @@ def get_data(args):
         Cate = args['Cate']
     else:
         Cate = False
-    val_selected = table_01_all.copy()
+    if 'Label' in args.keys():
+        Label = args['Label']
+    else:
+        Label = False
+    val_selected = table_01_all.copy().sort_values('starttime', ascending=True)
     if ID:
         val_selected = val_selected[val_selected['subject_id'] == int(ID)]
     if Cate:
         val_selected = val_selected[val_selected['category'] == Cate]
+    if Label:
+        val_selected = val_selected[val_selected['label'] == Label]
+    print(val_selected[['subject_id','label']])
     return val_selected

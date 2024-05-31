@@ -6,6 +6,7 @@
     <title>patient_page</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>import * as d3 from "https://cdn.jsdelivr.net/npm/d3-force@3/+esm";</script>
     <script src="/static/patient_page.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/patient_page.css"> 
     <h1 id='patient_id'>{{ID}}</h1>
@@ -30,13 +31,12 @@
                 data.Categories.forEach(function(item) {
                     var cell = document.createElement('td');
                     cell.setAttribute("id", "idx_categories");
-                    cell.setAttribute("class", "btn btn-secondary");
+                    cell.setAttribute("class", "btn btn-primary");
                     cell.style.width = "100%";
-                    cell.style.padding = "5px"; // Add padding here
+                    cell.style.gap = "5px"; // Add padding here
                     cell.appendChild(document.createTextNode(item));
                     $('#category_list').append(cell);
                 });
-            $('#category_list').style.padding = "5px";
                 
 
             });
