@@ -3,38 +3,43 @@
 {% block title %}Patient Page{% endblock %}
 
 {% block content %}
-<h1>Patient Page for ID: {{ ID }}</h1>
-<div class="screen_01_image_view">        
-</div>
-<div class="screen_02_table_list">
-    <table id="category_list">
-    </table>
-</div>
-<div class="screen_03_detail_results">
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>    
+<h1>Patient Page for Patient {{ ID }}</h1>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="/static/patient_page.js"></script>
-<link rel="stylesheet" type="text/css" href="/static/patient_page.css">
+<script>
+    function fetchBasicData() {
+        const patientID = document.getElementById('patientSelect').value || "{{ ID }}";
+        if (patientID) {
+            fetch(`/get_discharge_data?ID=${patientID}`)
+                .then(response => response.json())
+                .then(data => {
+                    for (const [key, value] of Object.entries(data)) {
+                        // Perform some operation with each key-value pair
+                        const div_box = document.createElement('div');
+                        div_box.setAttribute('id', key);
+                        div_box.setAttribute('class', 'Summary_Box');
+                        div_box.appendChild(document.createTextNode(key));
+                        div_box.style.fontSize = '20px';
 
-<script type="text/javascript">
-    const patientID = document.getElementById('patientSelect').value || "{{ ID }}";
-    function make_category_list(id) {
-        console.log("Performing action with Patient ID:", id);
-        $.getJSON('/get_categories?ID=' + patientID, function(data) {
-            data.Categories.forEach(function(item) {
-                const cell = document.createElement('td');
-                cell.setAttribute("id", "idx_categories");
-                cell.setAttribute("class", "btn btn-secondary");
-                cell.style.width = "100%";
-                cell.style.padding = "5px"; // Add padding here
-                cell.appendChild(document.createTextNode(item));
-                $('#category_list').append(cell);
-            });
-            $('#category_list').style.padding = "5px";
-        });
+                        const div_under = document.createElement('div');
+                        div_under.setAttribute('class', 'Inner_Box');
+                        div_under.style.fontSize = '15px';
+                        div_under.style.height = '15vh';
+                        div_under.style.display = 'flex';
+                        div_under.style.flexDirection = 'column';
+                        div_under.style.overflowY= 'auto';
+                        value.forEach((val) =>{
+                            let div_txt = document.createElement('div');
+                            div_txt.appendChild(document.createTextNode(val));
+                            div_under.appendChild(div_txt);
+                        });
+                            
+                        div_box.appendChild(div_under);
+                        $('.content').append(div_box);
+                    }
+                });
+                
+        }
     }
-    document.addEventListener('DOMContentLoaded', () => make_category_list(patientID));
+    document.addEventListener('DOMContentLoaded', fetchBasicData);
 </script>
 {% endblock %}
