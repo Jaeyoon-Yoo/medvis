@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template
 import pandas as pd
-from yoo_work import *
 
 app = Flask(__name__)
 
