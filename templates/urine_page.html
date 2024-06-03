@@ -4,66 +4,147 @@
 
 {% block content %}
 <h1>Urine Data for Patient {{ ID }}</h1>
-<canvas id="urineChart" style="margin-top: 20px;"></canvas>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<label for="timeRange">Select Time Range (hours):</label>
+<input type="range" id="timeRange" name="timeRange" min="24" max="72" step="24" value="24" oninput="updateTimeRangeLabel(this.value)">
+<span id="timeRangeLabel">24</span> hours
+<div id="chart"></div>
+<script src="https://d3js.org/d3.v6.min.js"></script>
 <script>
+    function updateTimeRangeLabel(value) {
+        document.getElementById('timeRangeLabel').textContent = value;
+        fetchUrineData();
+    }
+
     function fetchUrineData() {
         const patientID = document.getElementById('patientSelect').value || "{{ ID }}";
+        const hours = document.getElementById('timeRange').value;
         if (patientID) {
-            fetch(`/get_urine_data?ID=${patientID}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.time.length === 0) {
-                        alert("No urine data available for this patient.");
-                        return;
-                    }
-                    const ctx = document.getElementById('urineChart').getContext('2d');
-                    if (window.urineChart) {
-                        window.urineChart.destroy();
-                    }
-                    window.urineChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.time,
-                            datasets: [
-                                {
-                                    label: 'Urine Input',
-                                    data: data.amount_input,
-                                    borderColor: 'blue',
-                                    borderWidth: 1,
-                                    fill: false
-                                },
-                                {
-                                    label: 'Urine Output',
-                                    data: data.amount_output,
-                                    borderColor: 'red',
-                                    borderWidth: 1,
-                                    fill: false
-                                }
-                            ]
-                        },
-                        options: {
-                            scales: {
-                                x: {
-                                    type: 'time',
-                                    time: {
-                                        unit: 'hour'
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => console.error('Error fetching urine data:', error));
-        } else {
-            if (window.urineChart) {
-                window.urineChart.destroy();
-            }
+            Promise.all([
+                fetch(`/get_urine_data?ID=${patientID}`).then(response => response.json()),
+                fetch(`/get_urine_input_data?ID=${patientID}`).then(response => response.json())
+            ])
+            .then(([outputData, inputData]) => {
+                if (outputData.time.length === 0) {
+                    alert("No urine data available for this patient.");
+                    return;
+                }
+                filterDataByHours(outputData, inputData, hours);
+            })
+            .catch(error => console.error('Error fetching urine data:', error));
         }
     }
+
+    function filterDataByHours(outputData, inputData, hours) {
+        const parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
+        const maxTime = d3.max(outputData.time, d => parseTime(d));
+        const pastTime = new Date(maxTime.getTime() - (hours * 60 * 60 * 1000));
+
+        const filteredOutputData = {
+            time: [],
+            values: []
+        };
+
+        outputData.time.forEach((d, i) => {
+            const time = parseTime(d);
+            if (time >= pastTime) {
+                filteredOutputData.time.push(time);
+                filteredOutputData.values.push(outputData.values[i]);
+            }
+        });
+
+        const filteredInputData = inputData.map(d => ({
+            starttime: parseTime(d.starttime),
+            endtime: parseTime(d.endtime),
+            amount: d.amount
+        })).filter(d => d.endtime >= pastTime);
+
+        drawChart(filteredOutputData, filteredInputData, maxTime);
+    }
+
+    function drawChart(outputData, inputData, maxTime) {
+        // Remove any existing SVG
+        d3.select("#chart").selectAll("*").remove();
+
+        const margin = {top: 20, right: 30, bottom: 30, left: 40},
+              width = 800 - margin.left - margin.right,
+              height = 400 - margin.top - margin.bottom;
+
+        const svg = d3.select("#chart")
+                      .append("svg")
+                      .attr("width", width + margin.left + margin.right)
+                      .attr("height", height + margin.top + margin.bottom)
+                      .append("g")
+                      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        const x = d3.scaleTime()
+                    .domain([d3.min(outputData.time), maxTime])
+                    .range([0, width]);
+
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(outputData.values)])
+                    .range([height, 0]);
+
+        svg.append("g")
+           .attr("transform", "translate(0," + height + ")")
+           .call(d3.axisBottom(x));
+
+        svg.append("g")
+           .call(d3.axisLeft(y));
+
+        const line = d3.line()
+                       .x(d => x(d))
+                       .y((d, i) => y(outputData.values[i]));
+
+        svg.append("path")
+           .datum(outputData.time)
+           .attr("fill", "none")
+           .attr("stroke", "steelblue")
+           .attr("stroke-width", 1.5)
+           .attr("d", line);
+
+        inputData.forEach(d => {
+            svg.append("line")
+               .attr("x1", x(d.starttime))
+               .attr("x2", x(d.endtime))
+               .attr("y1", 0)
+               .attr("y2", 0)
+               .attr("stroke", "blue")
+               .attr("stroke-width", 3);
+
+            const gradient = svg.append("defs")
+                                .append("linearGradient")
+                                .attr("id", `gradient-${d.starttime.getTime()}`)
+                                .attr("x1", "0%")
+                                .attr("x2", "100%")
+                                .attr("y1", "0%")
+                                .attr("y2", "0%");
+
+            gradient.append("stop")
+                    .attr("offset", "0%")
+                    .attr("stop-color", "blue")
+                    .attr("stop-opacity", 0);
+
+            gradient.append("stop")
+                    .attr("offset", "50%")
+                    .attr("stop-color", "blue")
+                    .attr("stop-opacity", 1);
+
+            gradient.append("stop")
+                    .attr("offset", "100%")
+                    .attr("stop-color", "blue")
+                    .attr("stop-opacity", 0);
+
+            const gradientWidth = x(new Date(d.endtime.getTime() + (60 * 60 * 1000))) - x(d.starttime);
+
+            svg.append("rect")
+               .attr("x", x(d.starttime))
+               .attr("y", 0)
+               .attr("width", gradientWidth)
+               .attr("height", height)
+               .style("fill", `url(#gradient-${d.starttime.getTime()})`);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', fetchUrineData);
 </script>
 {% endblock %}

@@ -81,23 +81,28 @@ def get_urine_data():
     args = request.args
     ID = args.get('ID', False)
     if ID:
-        input_data = urine_input[urine_input['subject_id'] == int(ID)]
         output_data = urine_output[urine_output['subject_id'] == int(ID)]
-        
-        input_data = input_data[['starttime', 'amount']].rename(columns={'starttime': 'time', 'amount': 'amount_input'})
-        output_data = output_data[['charttime', 'value']].rename(columns={'charttime': 'time', 'value': 'amount_output'})
-        
-        data = pd.merge(input_data, output_data, on='time', how='outer').sort_values('time')
-        data['time'] = pd.to_datetime(data['time'])
-        data = data.fillna(0)
+        output_data = output_data[['charttime', 'value']]
+        output_data = output_data.sort_values('charttime')
         
         return jsonify({
-            'time': list(data['time'].astype(str)),
-            'amount_input': list(data['amount_input']),
-            'amount_output': list(data['amount_output'])
+            'time': list(output_data['charttime'].astype(str)),
+            'values': list(output_data['value'])
         })
     else:
-        return jsonify({'time': [], 'amount_input': [], 'amount_output': []})
+        return jsonify({'time': [], 'values': []})
+
+
+@app.route('/get_urine_input_data')
+def get_urine_input_data():
+    args = request.args
+    ID = args.get('ID', False)
+    if ID:
+        input_data = urine_input[urine_input['subject_id'] == int(ID)]
+        input_data = input_data[['starttime', 'endtime', 'amount']]
+        return jsonify(input_data.to_dict(orient='records'))
+    else:
+        return jsonify([])
 
 @app.route('/urine_page')
 def urine_page():
