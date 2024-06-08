@@ -74,7 +74,10 @@ def display_drug_page():
         st.session_state.Detail_Page = False
 
 def display_urine_page():
-    table_sub = st.session_state.data_df_duration[st.session_state.data_df_duration.label.isin(['Propofol'])].set_index('subject_id').loc[[st.session_state.ID]]
+    table_sub = st.session_state.data_df_duration[
+        st.session_state.data_df_duration.label.isin(['Propofol'])
+    ]
+    table_sub = table_sub[table_sub['subject_id'] == st.session_state.ID].set_index('subject_id')
     table_sub = table_sub[(table_sub['endtime'] < st.session_state.now)]
     table_sub = table_sub.sort_values(by='starttime')
     fig = px.scatter(table_sub, x="starttime", y="amount", title='amount of urine input', labels={'x': 'time', 'y': 'amount'})
@@ -82,6 +85,8 @@ def display_urine_page():
     st.slider('start')
 
 def display_gcs_page():
+    print(type(st.session_state.ID), st.session_state.ID, )
+    # print(st.session_state.data_df_point)
     table_sub = st.session_state.data_df_point.set_index('subject_id').loc[st.session_state.ID].sort_values(by='charttime')
     table_sub = table_sub[(table_sub['charttime'] < st.session_state.now)]
     table_sub = table_sub[table_sub['File_name'] == 'gcs.csv']

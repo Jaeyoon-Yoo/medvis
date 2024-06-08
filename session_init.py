@@ -29,6 +29,7 @@ def initialize_session():
                 else:
                     st.write('Error: ', file_name)
         st.session_state.data_df_point['charttime'] = [datetime.datetime.strptime(i, "%Y-%m-%d %H:%M") if i.count(":") == 1 else datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S") for i in st.session_state.data_df_point['charttime']]
+        # st.session_state.data_df_point['charttime'] = [datetime.datetime.strptime(i, "%Y-%m-%d %H:%M") if i.count(":") == 1 else datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S") for i in st.session_state.data_df_point['charttime']]
         st.session_state.data_df_duration['starttime'] = [datetime.datetime.strptime(i, "%Y-%m-%d %H:%M") if i.count(":") == 1 else datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S") for i in st.session_state.data_df_duration['starttime']]
         st.session_state.data_df_duration['endtime'] = [datetime.datetime.strptime(i, "%Y-%m-%d %H:%M") if i.count(":") == 1 else datetime.datetime.strptime(i, "%Y-%m-%d %H:%M:%S") for i in st.session_state.data_df_duration['endtime']]
         st.session_state.ID_list = set(st.session_state.data_df_discharge['subject_id']) | set(st.session_state.data_df_point['subject_id']) | set(st.session_state.data_df_duration['subject_id'])
