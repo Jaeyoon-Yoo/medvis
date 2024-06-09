@@ -4,6 +4,7 @@ from session_init import initialize_session
 from views import main_page, patient_page, detail_page
 
 # Initialize session state
+st.set_page_config(layout="wide")
 initialize_session()
 
 # Sidebar
@@ -16,6 +17,7 @@ def handle_toggle_change():
 st.sidebar.toggle(
     "Overview", 
     key='overview',
+    value=st.session_state.Page_now == 'Main_page',
     on_change=handle_toggle_change
 )
 
