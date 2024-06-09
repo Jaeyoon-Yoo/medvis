@@ -5,7 +5,7 @@ import plotly.express as px
 from streamlit_plotly_events import plotly_events
 from st_click_detector import click_detector
 import datetime  # Necessary import for handling datetime
-from utils import save_tag, update_text
+from utils import save_tag, update_text, text_to_formatted_text
 
 def interpolate_y_value(x_value, output_data):
     for i in range(len(output_data) - 1):
@@ -226,6 +226,40 @@ def display_o2_therapy_page():
         st.table(table_numeric[::-1])
 
 def display_text_input_page():
+    text_df_sub = st.session_state.text_df[st.session_state.text_df['subject_id'] == st.session_state.ID]
+    st.write(text_df_sub)
+    st.subheader('Text input')
+    if len(text_df_sub) == 0:
+        text_header = st.empty()
+        with text_header:
+            st.write('No text input')
+            clicked = click_detector('<a href="#" id="Add_new_text">[ New ] | </a>', key = 'click_detector_add_new_text')
+        if clicked == 'Add_new_text':
+            st.session_state.text_df.loc[len(st.session_state.text_df)] = [st.session_state.now,st.session_state.now,'',st.session_state.ID]
+            st.session_state.text_df.to_csv('tables/tag_folder/text_histories.csv', index=False)
+            st.rerun()
+    else:
+        for i in range(len(text_df_sub)):
+            text_header = st.empty()
+            with text_header:
+                clicked = click_detector(text_to_formatted_text(text_df_sub.iloc[i]['text_detail']), key = f'click_detector_{i}')
+            if clicked == 'Modify':
+                st.markdown(
+                    """
+                    <style>
+                    .custom-bg {
+                        background-color: lightgray;
+                        padding: 10px;
+                        border-radius: 5px;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+                with text_header:
+                    st.markdown('<div class="custom-bg">Modifying</div>', unsafe_allow_html=True)
+
+                
     if "text_in" not in st.session_state:
         st.session_state.text_in = ''
     if "clicked_link" not in st.session_state:
@@ -250,5 +284,6 @@ def display_text_input_page():
                     tag_text = ''
                 st.text_area('-', value=tag_text, key=f'tag_text_{clicked}', on_change=lambda: save_tag(clicked))
     else:
-        st.button('return', on_click=lambda: update_text())
-        text_loc.text_area('', value=st.session_state.text_in, key='text_in_area', on_change=lambda: update_text())
+        st.table(st.session_state.tag_df)
+        st.sidebar.text_area('', value=st.session_state.text_in, key='text_in_area', on_change=lambda: update_text())
+        st.sidebar.button('return', on_click=lambda: update_text())

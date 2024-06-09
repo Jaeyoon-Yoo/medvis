@@ -15,7 +15,8 @@ def initialize_session():
         st.session_state.Ongoing = True
         st.session_state.data_df_point = pd.DataFrame()
         st.session_state.data_df_duration = pd.DataFrame()
-        st.session_state.tag_df = pd.read_csv('tables/tag_folder/tags.csv')
+        st.session_state.text_df = pd.read_csv('tables/tag_folder/text_histories.csv', dtype=str)
+        st.session_state.tag_df = pd.read_csv('tables/tag_folder/tags.csv', dtype=str)
         for file_name in os.listdir('tables'):
             if file_name.endswith('.csv'):
                 data_sub = pd.read_csv('tables/' + file_name, dtype=str)
