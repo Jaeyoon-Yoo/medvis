@@ -16,6 +16,7 @@ def handle_toggle_change():
 st.sidebar.toggle(
     "Overview", 
     key='overview',
+    value=st.session_state.Page_now == 'Main_page',
     on_change=handle_toggle_change
 )
 

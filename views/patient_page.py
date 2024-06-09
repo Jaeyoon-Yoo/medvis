@@ -1,7 +1,7 @@
 import streamlit as st
 
 def display():
-    st.write(f"Selected Patient ID: {st.session_state.selected_id}")
+    st.write(f"Selected Patient ID: {st.session_state.ID}")
     cols_page = st.columns(3)
     cols_page[0].button('Basic page', on_click=lambda: st.session_state.update(Detail_Page='basic_page', Page_now='Detail_page'))
     cols_page[1].button('Drug page', on_click=lambda: st.session_state.update(Detail_Page='drug_page', Page_now='Detail_page'))
