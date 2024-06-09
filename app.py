@@ -4,6 +4,7 @@ from session_init import initialize_session
 from views import main_page, patient_page, detail_page
 
 # Initialize session state
+st.set_page_config(layout="wide")
 initialize_session()
 
 # Sidebar
