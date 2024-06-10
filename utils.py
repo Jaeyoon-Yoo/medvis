@@ -31,7 +31,7 @@ def convert_to_clickable_links(text):
         st.session_state.hidden_input = link_text
         return f'<a href="#" id={link_text}>{link_text}</a>'
     pattern = re.compile(r'\[\[(.*?)\]\]')
-    return '<a href="#" id="Modify">[Modify] | </a> <a href="#" id="Add">[Add]</a> | <a href="#" id="Remove">[Remove]</a> | ' + pattern.sub(link_replacer, text)
+    return '<a href="#" id="Undo">Undo</a> | ' + pattern.sub(link_replacer, text.replace('\n', '<br>'))
 
 def update_text():
     st.session_state.text_in = st.session_state.text_in_area

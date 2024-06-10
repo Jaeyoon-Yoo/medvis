@@ -29,7 +29,30 @@ def display():
         """,
         unsafe_allow_html=True
     )
-    
+    upcoming_events = []
+    table_selected = table_sub[
+        (table_sub['starttime'] < st.session_state.now) &
+        (table_sub['endtime'] + pd.Timedelta(hours=1) > st.session_state.now)
+    ].sort_values(by='starttime', ascending=True).reset_index(drop=False)
+    for i, target in enumerate(table_selected.itertuples()):
+        if target.rateuom == 'mcg/kg/min':
+            target_rate = float(target.rate) * float(target.patientweight) / 1000 * 60
+        elif target.rateuom == 'mcg/hour':
+            target_rate = float(target.rate) / 1000
+        else:
+            target_rate = float(target.rate)
+        target_ontime = st.session_state.now - target.starttime
+        target_minutes = target_ontime.total_seconds() / 60
+        target_amount_now = float(target_rate) * (target_ontime.total_seconds() / 3600)
+        target_amount_total = float(target.amount)
+        total_duration_minutes = (target.endtime - target.starttime).total_seconds() / 60
+        
+        if target_amount_now <= target_amount_total + float(target_rate) * (900 / 3600):
+            if target_amount_now >= target_amount_total - float(target_rate) * (900 / 3600):
+                upcoming_events.append(f"{target.subject_id} | {target.label} | {max(0,int(total_duration_minutes-target_minutes))} min left")
+    for event in upcoming_events:
+        st.markdown(f'<p style="font-size:24px;color:orange;">⚠️ {event}</p>', unsafe_allow_html=True)
+    st.write("<hr>", unsafe_allow_html=True)
     for ID in st.session_state.ID_list:
         # 각 ID에 대해 컬럼 생성
         cols = st.columns([1, 2, 2, 5])  # 버튼 | 수혈 | 수액 | 기타

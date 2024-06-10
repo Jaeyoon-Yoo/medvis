@@ -32,15 +32,18 @@ st.session_state.now = datetime.datetime.combine(st.session_state.date_now,  st.
 #     st.session_state.Page_now = 'Main_page'
 
 if st.sidebar.button('Time ongoing'):
-    time_next = (datetime.datetime.combine(datetime.date.today(), t_now) + datetime.timedelta(minutes=5)).time()
+    time_next = (datetime.datetime.combine(datetime.date.today(), t_now) + datetime.timedelta(minutes=3)).time()
     if time_next < t_now:
         d_now += datetime.timedelta(days=1)
     t_now = time_next
+chk = 0
 if st.session_state.time_now!=t_now:
     st.session_state.time_now = t_now
-    st.rerun()
+    chk = 1
 if st.session_state.date_now !=d_now:
     st.session_state.date_now = d_now
+    chk = 1
+if chk:
     st.rerun()
 # Page navigation logic
 if st.session_state.Page_now == 'Main_page':

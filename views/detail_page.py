@@ -226,64 +226,105 @@ def display_o2_therapy_page():
         st.table(table_numeric[::-1])
 
 def display_text_input_page():
-    text_df_sub = st.session_state.text_df[st.session_state.text_df['subject_id'] == st.session_state.ID]
-    st.write(text_df_sub)
+    text_df_sub = st.session_state.text_df[st.session_state.text_df['subject_id'] == st.session_state.ID].fillna('')
+    if 'click_detector_add_new_text' not in st.session_state:
+        st.session_state.click_detector_add_new_text = 0
+    if 'Modify_detection' not in st.session_state:
+        st.session_state.Modify_detection = -1
+    if 'Remove_detection' not in st.session_state:
+        st.session_state.Remove_detection = -1
     st.subheader('Text input')
-    if len(text_df_sub) == 0:
+    text_header = st.empty()
+    with text_header:
+        # st.session_state['click_detector_add_new_text'] = 0
+        st.button('Add new text', on_click=lambda: st.session_state.update(click_detector_add_new_text=1))
+    if st.session_state.click_detector_add_new_text == 1:
+        st.session_state.text_df.loc[len(st.session_state.text_df)] = [str(st.session_state.now),str(st.session_state.now),'',st.session_state.ID]
+        st.session_state.text_df.to_csv('tables/tag_folder/text_histories.csv', index=False)
+        st.session_state.click_detector_add_new_text = 0
+        text_df_sub = st.session_state.text_df[st.session_state.text_df['subject_id'] == st.session_state.ID].fillna('')
+        
+    for i in range(len(text_df_sub)):
+        st.write("<hr>", unsafe_allow_html=True)
         text_header = st.empty()
         with text_header:
-            st.write('No text input')
-            clicked = click_detector('<a href="#" id="Add_new_text">[ New ] | </a>', key = 'click_detector_add_new_text')
-        if clicked == 'Add_new_text':
-            st.session_state.text_df.loc[len(st.session_state.text_df)] = [st.session_state.now,st.session_state.now,'',st.session_state.ID]
-            st.session_state.text_df.to_csv('tables/tag_folder/text_histories.csv', index=False)
-            st.rerun()
-    else:
-        for i in range(len(text_df_sub)):
-            text_header = st.empty()
-            with text_header:
-                clicked = click_detector(text_to_formatted_text(text_df_sub.iloc[i]['text_detail']), key = f'click_detector_{i}')
-            if clicked == 'Modify':
-                st.markdown(
-                    """
-                    <style>
-                    .custom-bg {
-                        background-color: lightgray;
-                        padding: 10px;
-                        border-radius: 5px;
-                    }
-                    </style>
-                    """,
-                    unsafe_allow_html=True
-                )
-                with text_header:
-                    st.markdown('<div class="custom-bg">Modifying</div>', unsafe_allow_html=True)
-
-                
-    if "text_in" not in st.session_state:
-        st.session_state.text_in = ''
-    if "clicked_link" not in st.session_state:
-        st.session_state.clicked_link = ''
-    if "text_written" not in st.session_state:
-        st.session_state.text_written = 0
-    text_loc = st.empty()
-    if st.session_state.text_written == 1:
-        with text_loc:
-            clicked = click_detector(st.session_state.converted_text, key='click_detector')
-        if clicked == "Modify":
-            st.session_state.text_written = 1 - st.session_state.text_written
-            st.rerun()
-        elif clicked == '':
-            pass
-        else:
-            if f'tag_text_{clicked}' not in st.session_state:
-                if clicked in st.session_state.tag_df['tag_name'].values:
-                    tag_text = st.session_state.tag_df[st.session_state.tag_df['tag_name'] == clicked]['tag_text'].values[0]
+            cols = st.columns([1, 1, 15])
+            with cols[0]:
+                A = st.button('Modify', key = f'mod_btn_{i}', on_click=lambda i=i: st.session_state.update(Modify_detection=f'{i}'))
+            with cols[1]:
+                B = st.button('Remove', key = f'remove_btn_{i}', on_click=lambda i=i: st.session_state.update(Remove_detection=f'{i}'))
+            with cols[2]:
+                text_box = st.empty()
+                if st.session_state.Modify_detection == str(i):
+                    st.sidebar.subheader(f'Date: {text_df_sub.iloc[i]["written_date"]}')
+                    st.sidebar.text_area('', value=text_df_sub.iloc[i]['text_detail'].replace('<br>','\n'), key='text_in_area', on_change=lambda: update_text())
+                    return_to_record = st.sidebar.button('return')
+                    if return_to_record:
+                        st.session_state.Modify_detection = -1
+                        st.session_state.text_df.loc[text_df_sub.index[i], 'text_detail'] = st.session_state.text_in_area
+                        st.session_state.text_df.to_csv('tables/tag_folder/text_histories.csv', index=False)
+                        st.session_state[f'click_detector_sub_{i}'] =0
+                        st.rerun()
+                    st.markdown(
+                            """
+                            <style>
+                            .custom-bg {
+                                background-color: lightgray;
+                                padding: 10px;
+                                border-radius: 5px;
+                            }
+                            </style>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                    with text_box:
+                        st.markdown('<div class="custom-bg">Modifying</div>', unsafe_allow_html=True)
+                elif st.session_state.Remove_detection == str(i):
+                    st.session_state.text_df = st.session_state.text_df.drop(text_df_sub.index[i])
+                    st.session_state.text_df.to_csv('tables/tag_folder/text_histories.csv', index=False)
+                    st.session_state.Remove_detection = -1
+                    st.rerun()
                 else:
-                    st.session_state.tag_df.loc[len(st.session_state.tag_df)] = [clicked, '']
-                    tag_text = ''
-                st.text_area('-', value=tag_text, key=f'tag_text_{clicked}', on_change=lambda: save_tag(clicked))
-    else:
-        st.table(st.session_state.tag_df)
-        st.sidebar.text_area('', value=st.session_state.text_in, key='text_in_area', on_change=lambda: update_text())
-        st.sidebar.button('return', on_click=lambda: update_text())
+                    with text_box:
+                        clicked = click_detector(text_to_formatted_text(text_df_sub.iloc[i]['written_date']+' |<br>'+text_df_sub.iloc[i]['text_detail']), key=f'click_detector_{i}')
+                    if (clicked != '') & (clicked != 'Undo'):
+                        if clicked in st.session_state.tag_df['tag_name'].values:
+                            tag_text = st.session_state.tag_df[st.session_state.tag_df['tag_name'] == clicked]['tag_text'].values[0]
+                        else:
+                            st.session_state.tag_df.loc[len(st.session_state.tag_df)] = [clicked, '']
+                            tag_text = ''
+                        colss = st.columns([1,20])
+                        with colss[0]:
+                            st.subheader(clicked)
+                        with colss[1]:
+                            st.text_area('-', value=tag_text, key=f'tag_text_{clicked}', on_change=lambda clicked=clicked: save_tag(clicked))
+                        
+       
+                
+    # if "text_in" not in st.session_state:
+    #     st.session_state.text_in = ''
+    # if "clicked_link" not in st.session_state:
+    #     st.session_state.clicked_link = ''
+    # if "text_written" not in st.session_state:
+    #     st.session_state.text_written = 0
+    # text_loc = st.empty()
+    # if st.session_state.text_written == 1:
+    #     with text_loc:
+    #         clicked = click_detector(st.session_state.converted_text, key='click_detector')
+    #     if clicked == "Modify":
+    #         st.session_state.text_written = 1 - st.session_state.text_written
+    #         st.rerun()
+    #     elif clicked == '':
+    #         pass
+    #     else:
+    #         if f'tag_text_{clicked}' not in st.session_state:
+    #             if clicked in st.session_state.tag_df['tag_name'].values:
+    #                 tag_text = st.session_state.tag_df[st.session_state.tag_df['tag_name'] == clicked]['tag_text'].values[0]
+    #             else:
+    #                 st.session_state.tag_df.loc[len(st.session_state.tag_df)] = [clicked, '']
+    #                 tag_text = ''
+    #             st.text_area('-', value=tag_text, key=f'tag_text_{clicked}', on_change=lambda: save_tag(clicked))
+    # else:
+    #     st.table(st.session_state.tag_df)
+    #     st.sidebar.text_area('', value=st.session_state.text_in, key='text_in_area', on_change=lambda: update_text())
+    #     st.sidebar.button('return', on_click=lambda: update_text())
